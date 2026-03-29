@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+.agent
+.history
+.idea
+.vscode
+*.log
+vietduc-blog-firebase-adminsdk-fbsvc-fb9fb16e37.json

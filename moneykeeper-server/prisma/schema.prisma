@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum TransactionType {
+  income
+  expense
+  transfer
+}
+
+enum BudgetPeriod {
+  day
+  week
+  month
+  year
+}
+
+model User {
+  id           String        @id // Firebase UID
+  email        String        @unique
+  display_name String?
+  avatar_url   String?
+  role         Role          @default(user)
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+
+  wallets      Wallet[]
+  categories   Category[]
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id              String   @id @default(uuid())
+  name            String
+  initial_balance Decimal  @default(0)
+  balance         Decimal  @default(0)
+  sort_order      Int      @default(0)
+  user_id         String
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  transactions_from Transaction[] @relation("FromWallet")
+  transactions_to   Transaction[] @relation("ToWallet")
+  budgets           Budget[]
+
+  @@unique([user_id, name])
+  @@map("wallets")
+}
+
+model Category {
+  id         String          @id @default(uuid())
+  name       String
+  type       TransactionType
+  icon       String?
+  parent_id  String?
+  parent     Category?       @relation("CategoryTree", fields: [parent_id], references: [id], onDelete: SetNull)
+  children   Category[]      @relation("CategoryTree")
+  user_id    String?
+  user       User?           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  is_default Boolean         @default(false)
+  created_at DateTime        @default(now())
+  updated_at DateTime        @updatedAt
+
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@unique([user_id, type, name])
+  @@map("categories")
+}
+
+model Transaction {
+  id           String          @id @default(uuid())
+  amount       Decimal
+  type         TransactionType
+  note         String?
+  date         DateTime
+  wallet_id    String
+  wallet       Wallet          @relation("FromWallet", fields: [wallet_id], references: [id], onDelete: Cascade)
+  to_wallet_id String?
+  to_wallet    Wallet?         @relation("ToWallet", fields: [to_wallet_id], references: [id], onDelete: Cascade)
+  category_id  String?
+  category     Category?       @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  user_id      String
+  user         User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  created_at   DateTime        @default(now())
+  updated_at   DateTime        @updatedAt
+
+  @@map("transactions")
+}
+
+model Budget {
+  id          String       @id @default(uuid())
+  name        String       @default("")
+  amount      Decimal
+  period      BudgetPeriod
+  is_global   Boolean      @default(false)
+  sort_order  Int          @default(0)
+  category_id String?
+  category    Category?    @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  wallet_id   String?
+  wallet      Wallet?      @relation(fields: [wallet_id], references: [id], onDelete: Cascade)
+  user_id     String
+  user        User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+
+  @@map("budgets")
+}
