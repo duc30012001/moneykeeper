@@ -13,7 +13,9 @@ RUN npx prisma generate
 
 # Copy source and build
 COPY . .
-RUN yarn build
+RUN yarn build && \
+    ls -la dist/ && \
+    test -f dist/main.js || (echo "ERROR: dist/main.js not found after build!" && exit 1)
 
 # ---- Production Stage ----
 FROM node:20-alpine AS runner
@@ -22,7 +24,7 @@ WORKDIR /app
 
 # Install only production deps
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --production && yarn cache clean
+RUN yarn install --frozen-lockfile --production --ignore-scripts && yarn cache clean
 
 # Copy Prisma schema + generated client
 COPY --from=builder /app/prisma ./prisma
