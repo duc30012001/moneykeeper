@@ -17,9 +17,7 @@ export class CategoryService {
 
   async findAll(userId: string): Promise<CategoryTree[]> {
     const categories = await this.prisma.category.findMany({
-      where: {
-        OR: [{ user_id: userId }, { is_default: true, user_id: null }],
-      },
+      where: { user_id: userId },
       include: { children: true },
       orderBy: { name: 'asc' },
     });
@@ -32,10 +30,7 @@ export class CategoryService {
     type: TransactionType,
   ): Promise<CategoryTree[]> {
     const categories = await this.prisma.category.findMany({
-      where: {
-        type,
-        OR: [{ user_id: userId }, { is_default: true, user_id: null }],
-      },
+      where: { user_id: userId, type },
       include: { children: true },
       orderBy: { name: 'asc' },
     });
@@ -45,10 +40,7 @@ export class CategoryService {
 
   async findOne(id: string, userId: string) {
     const category = await this.prisma.category.findFirst({
-      where: {
-        id,
-        OR: [{ user_id: userId }, { is_default: true, user_id: null }],
-      },
+      where: { id, user_id: userId },
       include: { children: true },
     });
     if (!category) throw new NotFoundException('Category not found');
