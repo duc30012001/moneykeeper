@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -32,15 +33,25 @@ export class TransactionService {
       if (query.to_date) where.date.lte = new Date(query.to_date);
     }
 
-    return this.prisma.transaction.findMany({
-      where,
-      include: {
-        wallet: { select: { id: true, name: true } },
-        to_wallet: { select: { id: true, name: true } },
-        category: { select: { id: true, name: true, icon: true } },
-      },
-      orderBy: { date: 'desc' },
-    });
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.transaction.findMany({
+        where,
+        include: {
+          wallet: { select: { id: true, name: true } },
+          to_wallet: { select: { id: true, name: true } },
+          category: { select: { id: true, name: true, icon: true } },
+        },
+        orderBy: { date: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.transaction.count({ where }),
+    ]);
+
+    return { data, total, page, limit };
   }
 
   async findOne(id: string, userId: string) {
@@ -59,17 +70,13 @@ export class TransactionService {
   async create(dto: CreateTransactionDto, userId: string) {
     const amount = new Prisma.Decimal(dto.amount);
 
-    if (dto.type === TransactionType.transfer && !dto.to_wallet_id) {
-      throw new BadRequestException(
-        'to_wallet_id is required for transfer type',
-      );
-    }
-    if (
-      dto.type === TransactionType.transfer &&
-      dto.wallet_id === dto.to_wallet_id
-    ) {
-      throw new BadRequestException('Cannot transfer to the same wallet');
-    }
+    this.validateTransfer(dto.type, dto.wallet_id, dto.to_wallet_id);
+    await this.verifyOwnership(
+      userId,
+      dto.wallet_id,
+      dto.to_wallet_id,
+      dto.category_id,
+    );
 
     return this.prisma.$transaction(async (tx) => {
       const transaction = await tx.transaction.create({
@@ -100,6 +107,19 @@ export class TransactionService {
   async update(id: string, dto: UpdateTransactionDto, userId: string) {
     const existing = await this.findOne(id, userId);
 
+    const newType = dto.type ?? existing.type;
+    const newWalletId = dto.wallet_id ?? existing.wallet_id;
+    const newToWalletId =
+      dto.to_wallet_id !== undefined ? dto.to_wallet_id : existing.to_wallet_id;
+
+    this.validateTransfer(newType, newWalletId, newToWalletId);
+    await this.verifyOwnership(
+      userId,
+      dto.wallet_id,
+      dto.to_wallet_id,
+      dto.category_id,
+    );
+
     return this.prisma.$transaction(async (tx) => {
       // Reverse old balance adjustments
       await this.reverseBalances(
@@ -118,8 +138,11 @@ export class TransactionService {
         where: { id },
         data: {
           amount: newAmount,
+          type: newType,
           note: dto.note,
           date: dto.date ? new Date(dto.date) : undefined,
+          wallet_id: newWalletId,
+          to_wallet_id: newToWalletId,
           category_id: dto.category_id,
         },
       });
@@ -127,10 +150,10 @@ export class TransactionService {
       // Apply new balance adjustments
       await this.adjustBalances(
         tx,
-        existing.type,
+        newType,
         newAmount,
-        existing.wallet_id,
-        existing.to_wallet_id,
+        newWalletId,
+        newToWalletId,
       );
 
       return updated;
@@ -151,6 +174,60 @@ export class TransactionService {
 
       return tx.transaction.delete({ where: { id } });
     });
+  }
+
+  private validateTransfer(
+    type: TransactionType,
+    walletId: string,
+    toWalletId?: string | null,
+  ) {
+    if (type === TransactionType.transfer && !toWalletId) {
+      throw new BadRequestException(
+        'to_wallet_id is required for transfer type',
+      );
+    }
+    if (type === TransactionType.transfer && walletId === toWalletId) {
+      throw new BadRequestException('Cannot transfer to the same wallet');
+    }
+  }
+
+  private async verifyOwnership(
+    userId: string,
+    walletId?: string,
+    toWalletId?: string | null,
+    categoryId?: string,
+  ) {
+    if (walletId) {
+      const wallet = await this.prisma.wallet.findFirst({
+        where: { id: walletId, user_id: userId },
+        select: { id: true },
+      });
+      if (!wallet)
+        throw new ForbiddenException('Wallet not found or not owned');
+    }
+
+    if (toWalletId) {
+      const wallet = await this.prisma.wallet.findFirst({
+        where: { id: toWalletId, user_id: userId },
+        select: { id: true },
+      });
+      if (!wallet)
+        throw new ForbiddenException(
+          'Destination wallet not found or not owned',
+        );
+    }
+
+    if (categoryId) {
+      const category = await this.prisma.category.findFirst({
+        where: {
+          id: categoryId,
+          OR: [{ user_id: userId }, { is_default: true }],
+        },
+        select: { id: true },
+      });
+      if (!category)
+        throw new ForbiddenException('Category not found or not owned');
+    }
   }
 
   private async adjustBalances(

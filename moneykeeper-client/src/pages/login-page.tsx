@@ -44,21 +44,15 @@ export default function LoginPage() {
                 <CardContent sx={{ p: 5, textAlign: "center" }}>
                     <Stack spacing={3} alignItems="center">
                         <Box
+                            component="img"
+                            src="/images/icon.png"
+                            alt="MoneyKeeper"
                             sx={{
                                 width: 64,
                                 height: 64,
                                 borderRadius: "16px",
-                                bgcolor: "primary.main",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontWeight: 900,
-                                fontSize: 28,
-                                color: "primary.contrastText",
                             }}
-                        >
-                            M
-                        </Box>
+                        />
 
                         <Box>
                             <Typography variant="h4" gutterBottom>

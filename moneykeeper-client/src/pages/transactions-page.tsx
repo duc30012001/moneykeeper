@@ -413,7 +413,7 @@ export default function TransactionsPage() {
 
             <Box sx={{ width: "100%", overflowX: "auto" }}>
                 <DataGrid
-                    rows={transactions ?? []}
+                    rows={transactions?.data ?? []}
                     columns={columns}
                     loading={isLoading}
                     autoHeight

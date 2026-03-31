@@ -39,18 +39,21 @@ export class WalletService {
   }
 
   async update(id: string, dto: UpdateWalletDto, userId: string) {
-    await this.findOne(id, userId);
-    return this.prisma.wallet.update({
-      where: { id },
-      data: {
-        name: dto.name,
-        initial_balance:
-          dto.initial_balance !== undefined
-            ? new Prisma.Decimal(dto.initial_balance)
-            : undefined,
-        sort_order: dto.sort_order,
-      },
-    });
+    const wallet = await this.findOne(id, userId);
+
+    const data: Prisma.WalletUpdateInput = {
+      name: dto.name,
+      sort_order: dto.sort_order,
+    };
+
+    if (dto.initial_balance !== undefined) {
+      const newInitial = new Prisma.Decimal(dto.initial_balance);
+      const delta = newInitial.minus(wallet.initial_balance);
+      data.initial_balance = newInitial;
+      data.balance = wallet.balance.add(delta);
+    }
+
+    return this.prisma.wallet.update({ where: { id }, data });
   }
 
   async remove(id: string, userId: string) {

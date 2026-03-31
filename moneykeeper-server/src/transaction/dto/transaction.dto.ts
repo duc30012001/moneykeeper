@@ -1,10 +1,14 @@
+import { Type } from 'class-transformer';
 import {
   IsDateString,
   IsDecimal,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
+  Min,
 } from 'class-validator';
 import { TransactionType } from '@prisma/client';
 
@@ -41,6 +45,10 @@ export class UpdateTransactionDto {
   @IsOptional()
   amount?: string;
 
+  @IsEnum(TransactionType)
+  @IsOptional()
+  type?: TransactionType;
+
   @IsString()
   @IsOptional()
   note?: string;
@@ -48,6 +56,14 @@ export class UpdateTransactionDto {
   @IsDateString()
   @IsOptional()
   date?: string;
+
+  @IsString()
+  @IsOptional()
+  wallet_id?: string;
+
+  @IsString()
+  @IsOptional()
+  to_wallet_id?: string | null;
 
   @IsString()
   @IsOptional()
@@ -74,4 +90,17 @@ export class TransactionQueryDto {
   @IsDateString()
   @IsOptional()
   to_date?: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  page?: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  limit?: number;
 }

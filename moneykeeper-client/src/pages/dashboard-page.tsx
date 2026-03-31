@@ -28,14 +28,15 @@ export default function DashboardPage() {
     const { data: transactions } = useTransactions();
     const { data: budgetSummary } = useBudgetSummary();
 
+    const txList = transactions?.data;
     const totalBalance =
         wallets?.reduce((sum, w) => sum + Number(w.balance), 0) ?? 0;
     const totalIncome =
-        transactions
+        txList
             ?.filter((t) => t.type === "income")
             .reduce((sum, t) => sum + Number(t.amount), 0) ?? 0;
     const totalExpense =
-        transactions
+        txList
             ?.filter((t) => t.type === "expense")
             .reduce((sum, t) => sum + Number(t.amount), 0) ?? 0;
 
@@ -228,7 +229,7 @@ export default function DashboardPage() {
                             />
                         }
                     >
-                        {transactions?.slice(0, 8).map((tx) => (
+                        {txList?.slice(0, 8).map((tx) => (
                             <Stack
                                 key={tx.id}
                                 direction="row"
@@ -285,7 +286,7 @@ export default function DashboardPage() {
                                 </Typography>
                             </Stack>
                         ))}
-                        {(!transactions || transactions.length === 0) && (
+                        {(!txList || txList.length === 0) && (
                             <Box sx={{ textAlign: "center", py: 4 }}>
                                 <Typography color="text.secondary">
                                     <FormattedMessage id="dashboard.noTransactions" />

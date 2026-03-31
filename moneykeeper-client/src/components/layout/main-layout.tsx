@@ -105,21 +105,15 @@ export default function MainLayout() {
                 }}
             >
                 <Box
+                    component="img"
+                    src="/images/icon.png"
+                    alt="MoneyKeeper"
                     sx={{
                         width: 36,
                         height: 36,
                         borderRadius: "10px",
-                        bgcolor: "grey.800",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: 800,
-                        fontSize: 16,
-                        color: "primary.contrastText",
                     }}
-                >
-                    M
-                </Box>
+                />
                 <Typography
                     variant="h6"
                     sx={{ fontWeight: 700, letterSpacing: "-0.5px" }}

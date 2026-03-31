@@ -22,15 +22,25 @@ export interface TransactionQuery {
     category_id?: string;
     from_date?: string;
     to_date?: string;
+    page?: number;
+    limit?: number;
+}
+
+export interface PaginatedTransactions {
+    data: Transaction[];
+    total: number;
+    page: number;
+    limit: number;
 }
 
 export function useTransactions(query?: TransactionQuery) {
     return useQuery({
         queryKey: ["transactions", query],
         queryFn: async () => {
-            const { data } = await api.get<Transaction[]>("/transactions", {
-                params: query,
-            });
+            const { data } = await api.get<PaginatedTransactions>(
+                "/transactions",
+                { params: query },
+            );
             return data;
         },
     });
@@ -65,8 +75,11 @@ export function useUpdateTransaction() {
         }: {
             id: string;
             amount?: string;
+            type?: "income" | "expense" | "transfer";
             note?: string;
             date?: string;
+            wallet_id?: string;
+            to_wallet_id?: string | null;
             category_id?: string;
         }) => api.put(`/transactions/${id}`, data),
         onSuccess: () => {
