@@ -60,8 +60,10 @@ function CategoryNode({
     return (
         <>
             <ListItemButton sx={{ pl: 2 + depth * 3, borderRadius: 1 }}>
-                <ListItemIcon sx={{ minWidth: 36 }}>
-                    {hasChildren ? (
+                <ListItemIcon sx={{ minWidth: 36, ...(category.icon && { color: 'unset' }) }}>
+                    {category.icon ? (
+                        <span style={{ fontSize: 20, lineHeight: 1 }}>{category.icon}</span>
+                    ) : hasChildren ? (
                         <FolderIcon fontSize="small" />
                     ) : (
                         <LabelIcon fontSize="small" />
