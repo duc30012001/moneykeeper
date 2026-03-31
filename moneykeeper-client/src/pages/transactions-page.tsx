@@ -214,10 +214,10 @@ export default function TransactionsPage() {
     const flattenCategories = (
         cats: typeof categories,
         depth = 0,
-    ): { id: string; name: string; depth: number }[] => {
+    ): { id: string; name: string; icon: string | null; depth: number }[] => {
         if (!cats) return [];
         return cats.flatMap((cat) => [
-            { id: cat.id, name: cat.name, depth },
+            { id: cat.id, name: cat.name, icon: cat.icon, depth },
             ...flattenCategories(cat.children, depth + 1),
         ]);
     };
@@ -237,8 +237,7 @@ export default function TransactionsPage() {
             headerName: intl.formatMessage({
                 id: "transactions.date",
             }),
-            flex: 1,
-            minWidth: 160,
+            width: 160,
             valueFormatter: (value: string) => formatDateTime(value),
         },
         // {
@@ -268,7 +267,7 @@ export default function TransactionsPage() {
             headerName: intl.formatMessage({
                 id: "transactions.category",
             }),
-            flex: 1,
+            flex: 1.5,
             minWidth: 120,
             valueGetter: (
                 _value: unknown,
@@ -307,7 +306,7 @@ export default function TransactionsPage() {
             headerName: intl.formatMessage({
                 id: "transactions.amount",
             }),
-            flex: 1,
+            width: 140,
             minWidth: 100,
             headerAlign: "right",
             align: "right",
@@ -633,9 +632,18 @@ export default function TransactionsPage() {
                                                 key={cat.id}
                                                 value={cat.id}
                                                 sx={{
-                                                    pl: 2 + cat.depth * 2,
+                                                    pl: `${16 + cat.depth * 32}px`,
                                                 }}
                                             >
+                                                {cat.icon && (
+                                                    <span
+                                                        style={{
+                                                            marginRight: 8,
+                                                        }}
+                                                    >
+                                                        {cat.icon}
+                                                    </span>
+                                                )}
                                                 {cat.name}
                                             </MenuItem>
                                         ),

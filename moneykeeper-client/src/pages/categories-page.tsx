@@ -60,9 +60,16 @@ function CategoryNode({
     return (
         <>
             <ListItemButton sx={{ pl: 2 + depth * 3, borderRadius: 1 }}>
-                <ListItemIcon sx={{ minWidth: 36, ...(category.icon && { color: 'unset' }) }}>
+                <ListItemIcon
+                    sx={{
+                        minWidth: 36,
+                        ...(category.icon && { color: "unset" }),
+                    }}
+                >
                     {category.icon ? (
-                        <span style={{ fontSize: 20, lineHeight: 1 }}>{category.icon}</span>
+                        <span style={{ fontSize: 20, lineHeight: 1 }}>
+                            {category.icon}
+                        </span>
                     ) : hasChildren ? (
                         <FolderIcon fontSize="small" />
                     ) : (
@@ -194,10 +201,10 @@ export default function CategoriesPage() {
     const flatList = (
         cats: Category[] | undefined,
         depth = 0,
-    ): { id: string; name: string; depth: number }[] => {
+    ): { id: string; name: string; icon: string | null; depth: number }[] => {
         if (!cats) return [];
         return cats.flatMap((c) => [
-            { id: c.id, name: c.name, depth },
+            { id: c.id, name: c.name, icon: c.icon, depth },
             ...flatList(c.children, depth + 1),
         ]);
     };
@@ -285,7 +292,8 @@ export default function CategoriesPage() {
                             value={form.name}
                             onChange={(e) => {
                                 setForm({ ...form, name: e.target.value });
-                                if (errors.name) setErrors({ ...errors, name: undefined });
+                                if (errors.name)
+                                    setErrors({ ...errors, name: undefined });
                             }}
                             error={!!errors.name}
                             helperText={errors.name}
@@ -324,6 +332,11 @@ export default function CategoriesPage() {
                                         value={cat.id}
                                         sx={{ pl: 2 + cat.depth * 2 }}
                                     >
+                                        {cat.icon && (
+                                            <span style={{ marginRight: 8 }}>
+                                                {cat.icon}
+                                            </span>
+                                        )}
                                         {cat.name}
                                     </MenuItem>
                                 ))}
