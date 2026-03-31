@@ -183,13 +183,9 @@ export default function TransactionsPage() {
                 date: new Date(form.date).toISOString(),
                 wallet_id: form.wallet_id,
                 to_wallet_id:
-                    form.type === "transfer"
-                        ? form.to_wallet_id
-                        : undefined,
+                    form.type === "transfer" ? form.to_wallet_id : undefined,
                 category_id:
-                    form.type !== "transfer"
-                        ? form.category_id
-                        : undefined,
+                    form.type !== "transfer" ? form.category_id : undefined,
             });
         }
         setDialogOpen(false);
@@ -245,28 +241,28 @@ export default function TransactionsPage() {
             minWidth: 160,
             valueFormatter: (value: string) => formatDateTime(value),
         },
-        {
-            field: "type",
-            headerName: intl.formatMessage({
-                id: "transactions.type",
-            }),
-            width: 120,
-            renderCell: (params) => (
-                <Chip
-                    label={intl.formatMessage({
-                        id: `transactions.type${params.value.charAt(0).toUpperCase() + params.value.slice(1)}`,
-                    })}
-                    size="small"
-                    color={
-                        params.value === "income"
-                            ? "success"
-                            : params.value === "expense"
-                              ? "error"
-                              : "info"
-                    }
-                />
-            ),
-        },
+        // {
+        //     field: "type",
+        //     headerName: intl.formatMessage({
+        //         id: "transactions.type",
+        //     }),
+        //     width: 120,
+        //     renderCell: (params) => (
+        //         <Chip
+        //             label={intl.formatMessage({
+        //                 id: `transactions.type${params.value.charAt(0).toUpperCase() + params.value.slice(1)}`,
+        //             })}
+        //             size="small"
+        //             color={
+        //                 params.value === "income"
+        //                     ? "success"
+        //                     : params.value === "expense"
+        //                       ? "error"
+        //                       : "info"
+        //             }
+        //         />
+        //     ),
+        // },
         {
             field: "category",
             headerName: intl.formatMessage({
@@ -302,7 +298,7 @@ export default function TransactionsPage() {
             headerName: intl.formatMessage({
                 id: "transactions.note",
             }),
-            flex: 1,
+            flex: 1.5,
             minWidth: 150,
             valueFormatter: (value: string | null) => value || "-",
         },
@@ -318,11 +314,7 @@ export default function TransactionsPage() {
             renderCell: (params) => {
                 const type = params.row.type;
                 const prefix =
-                    type === "income"
-                        ? "+"
-                        : type === "expense"
-                          ? "-"
-                          : "";
+                    type === "income" ? "+" : type === "expense" ? "-" : "";
                 const color =
                     type === "income"
                         ? "success.main"
@@ -330,10 +322,7 @@ export default function TransactionsPage() {
                           ? "error.main"
                           : "info.main";
                 return (
-                    <Typography
-                        variant="body2"
-                        sx={{ color, fontWeight: 600 }}
-                    >
+                    <Typography variant="body2" sx={{ color, fontWeight: 600 }}>
                         {prefix}
                         {formatMoney(params.value)}
                     </Typography>
@@ -423,9 +412,7 @@ export default function TransactionsPage() {
                             paginationModel: { pageSize: 10 },
                         },
                         sorting: {
-                            sortModel: [
-                                { field: "date", sort: "desc" },
-                            ],
+                            sortModel: [{ field: "date", sort: "desc" }],
                         },
                     }}
                     disableRowSelectionOnClick
@@ -599,14 +586,9 @@ export default function TransactionsPage() {
                                     }}
                                 >
                                     {wallets
-                                        ?.filter(
-                                            (w) => w.id !== form.wallet_id,
-                                        )
+                                        ?.filter((w) => w.id !== form.wallet_id)
                                         .map((w) => (
-                                            <MenuItem
-                                                key={w.id}
-                                                value={w.id}
-                                            >
+                                            <MenuItem key={w.id} value={w.id}>
                                                 {w.name}
                                             </MenuItem>
                                         ))}
