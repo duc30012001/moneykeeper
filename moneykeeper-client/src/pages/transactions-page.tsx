@@ -71,9 +71,16 @@ interface FormErrors {
 export default function TransactionsPage() {
     const intl = useIntl();
     const [filterType, setFilterType] = useState<TxType | "">("");
-    const { data: transactions, isLoading } = useTransactions(
-        filterType ? { type: filterType } : undefined,
-    );
+    const [paginationModel, setPaginationModel] = useState({
+        page: 0,
+        pageSize: 50,
+    });
+    const queryParams: import("../hooks/use-transactions").TransactionQuery = {
+        ...(filterType ? { type: filterType } : {}),
+        page: paginationModel.page + 1,
+        limit: paginationModel.pageSize,
+    };
+    const { data: transactions, isLoading } = useTransactions(queryParams);
     const { data: wallets } = useWallets();
     const { data: incomeCategories } = useCategories("income");
     const { data: expenseCategories } = useCategories("expense");
@@ -384,7 +391,13 @@ export default function TransactionsPage() {
                         <Chip
                             key={type}
                             label={filterLabels[type]}
-                            onClick={() => setFilterType(type)}
+                            onClick={() => {
+                                setFilterType(type);
+                                setPaginationModel((prev) => ({
+                                    ...prev,
+                                    page: 0,
+                                }));
+                            }}
                             sx={{
                                 textTransform: "capitalize",
                                 ...(filterType === type
@@ -405,11 +418,12 @@ export default function TransactionsPage() {
                     columns={columns}
                     loading={isLoading}
                     autoHeight
+                    paginationMode="server"
+                    rowCount={transactions?.total ?? 0}
+                    paginationModel={paginationModel}
+                    onPaginationModelChange={setPaginationModel}
                     pageSizeOptions={[10, 25, 50]}
                     initialState={{
-                        pagination: {
-                            paginationModel: { pageSize: 10 },
-                        },
                         sorting: {
                             sortModel: [{ field: "date", sort: "desc" }],
                         },
